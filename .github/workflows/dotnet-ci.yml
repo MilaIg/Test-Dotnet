@@ -1,30 +1,41 @@
-name: .NET CI
+name: .NET 8 CI
 
+# Тригери: push или pull request към main
 on:
   push:
-    branches: [ "main" ]
+    branches: [ main ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ main ]
 
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      # 1️⃣ Изтегляме кода от репото
+      - uses: actions/checkout@v3
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+      # 2️⃣ Настройка на .NET 8 SDK
+      - name: Setup .NET 8 SDK
+        uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: |
-            8.0.x
+          dotnet-version: '8.0.x'
 
+      # 3️⃣ Restore на всички зависимости
       - name: Restore dependencies
         run: dotnet restore DemoApp.sln
 
+      # 4️⃣ Build на solution-а
       - name: Build
-        run: dotnet build DemoApp.sln --configuration Release --no-restore
+        run: dotnet build DemoApp.sln --no-restore --configuration Release
 
-      - name: Test
-        run: dotnet test DemoService.Tests/DemoService.Tests.csproj --logger trx --no-build
+      # 5️⃣ Стартиране на тестовете
+      - name: Run tests
+        run: dotnet test DemoApp.sln --no-build --verbosity normal --configuration Release
 
+      # 6️⃣ (Опция) Публикуване на тестовите резултати като артефакт
+      #- name: Publish Test Results
+      #  uses: actions/upload-artifact@v3
+      #  with:
+      #    name: TestResults
+      #    path: '**/TestResults/*.xml'
